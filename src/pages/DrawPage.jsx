@@ -5,6 +5,7 @@ import ResultReveal from './ResultReveal';
 import './css/draw.css';
 import { Plus, Minus } from 'lucide-react';
 import { getAuth, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
+import Confetti from 'react-confetti';
 
 function DrawPage() {
     const {
@@ -13,8 +14,6 @@ function DrawPage() {
         loadFromFirebase,
         updatePrize,
         saveToFirebase,
-        noticeMessage,
-        themeColor  
     } = useDrawStore();
 
     const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +21,7 @@ function DrawPage() {
     const [results, setResults] = useState([]);
     const [showResult, setShowResult] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [confettiOn, setConfettiOn] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -108,18 +108,30 @@ function DrawPage() {
     const reset = () => {
         setShowResult(false);
         setResults([]);
+        setConfettiOn(false);
     };
 
     return (
-        <div className={`draw ${themeColor}`}>
+        <div className={`draw`}>
+            {/* draw 바로 아래에서 컨페티 렌더 */}
+            {confettiOn && (
+                <Confetti
+                className="no-capture confetti-canvas"
+                numberOfPieces={120}
+                gravity={0.3}
+                />
+            )}
             <div className="copy no-capture">Copyright 2025. Dingdongsun. All rights reserved.</div>
-            <h1>Lucky Draw</h1>
-            <p>{noticeMessage}</p>
+            <h1 className='logo'>Hani World</h1>
             <div className='draw-wrapper'>
                 {isLoading ? (
                     <div></div>
                 ) : showResult ? (
-                    <ResultReveal results={results} onFinish={reset} />
+                    <ResultReveal
+                        results={results}
+                        onFinish={reset}
+                        onConfettiChange={setConfettiOn} 
+                    />
                 ) : (
                     <div className='draw-contents'>
                         {isUnavailable ? (
@@ -133,12 +145,12 @@ function DrawPage() {
                                 )}
                                 <div className='draw-row'>
                                     <div className="draw-count-control">
-                                        <button className='minus' onClick={() => setDrawCount((prev) => Math.max(1, prev - 1))}><Minus /></button>
-                                        <input type="number" min="1" max="100" value={drawCount} onChange={(e) => setDrawCount(Number(e.target.value))} />
-                                        <button className='plus' onClick={() => setDrawCount((prev) => Math.min(100, prev + 1))}><Plus /></button>
+                                        <button className='minus' onClick={() => setDrawCount((prev) => Math.max(1, prev - 1))}><Minus color='#ff84b0'/></button>
+                                        <input type="number" min="1" max="100" value={drawCount} onChange={(e) => setDrawCount(Number(e.target.value))} style={{fontWeight: 'bold'}} />
+                                        <button className='plus' onClick={() => setDrawCount((prev) => Math.min(100, prev + 1))}><Plus color='#ff84b0'/></button>
                                     </div>
                                 </div>
-                                <button className={`go-draw ${themeColor}`} onClick={draw} disabled={!isAdmin} style={{width: 260}}>
+                                <button className={`go-draw`} onClick={draw} disabled={!isAdmin} style={{width: 260}}>
                                     Draw!
                                 </button>
                             </>
@@ -149,6 +161,8 @@ function DrawPage() {
             <a href={isAdmin ? '/#/admin' : '/#/admin-login'} className="go-admin no-capture">
                 {isAdmin ? '관리자 페이지로 이동' : '관리자로 로그인'}
             </a>
+            <div className="cr c1"></div>
+            <div className="cr c2"></div>
         </div>
     );
 }

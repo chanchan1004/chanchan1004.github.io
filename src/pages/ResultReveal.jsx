@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Confetti from 'react-confetti';
 import useDrawStore from '../store/useDrawStore';
 import ShippingFormModal from './ShippingFormModal';
-import ImageCaptureQR from '../components/ImageCaptureQR';
 
 
-function ResultReveal({ results, onFinish }) {
+function ResultReveal({ results, onFinish, onConfettiChange }) {
+    // eslint-disable-next-line
     const { displayMode,themeColor  } = useDrawStore();
     const [revealed, setRevealed] = useState([]);
     // eslint-disable-next-line
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [showConfetti, setShowConfetti] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [showShippingModal, setShowShippingModal] = useState(false);
+    const HIGH_COLOR = '#fff9b2'; // 원하는 컬러
 
     const isHighRank = (item) => item.rank === 1 || item.rank === 2;
 
@@ -37,15 +36,16 @@ function ResultReveal({ results, onFinish }) {
 
     const handleReveal = useCallback((index) => {
         const item = results[index];
+        if (!item) return;
 
         if (isHighRank(item)) {
-            setShowConfetti(true); // ❗️ 끄지 않음!
+        onConfettiChange?.(true); // 상위에서 컨페티 켜기
         }
 
         setTimeout(() => {
-            setRevealed((prev) => [...prev, index]);
+        setRevealed((prev) => (prev.includes(index) ? prev : [...prev, index]));
         }, isHighRank(item) ? 500 : 0);
-    }, [results]);
+    }, [results, onConfettiChange]);
 
     const handleShowSummary = () => {
         setShowSummary(true);
@@ -60,22 +60,19 @@ function ResultReveal({ results, onFinish }) {
             }
         }
     }, [currentIndex, results, handleReveal]);
-    
+
     const handleFinish = () => {
-        setShowConfetti(false); // ✅ 이 시점에만 컨페티 끔
-        onFinish();             // 외부 종료 콜백 호출
+        onConfettiChange?.(false); // 종료 시 컨페티 끄기
+        onFinish();           // 외부 종료 콜백 호출
     };
+
+    // 언마운트 시 혹시 켜져 있으면 끄기 (안전)
+    useEffect(() => {
+        return () => onConfettiChange?.(false);
+    }, [onConfettiChange]);
 
     return (
         <div className="draw-contents">
-            {showConfetti && (
-                <Confetti
-                    className="no-capture confetti-canvas"
-                    numberOfPieces={120}
-                    gravity={0.3}
-                />
-            )}
-
             {!showSummary ? (
                 <div>
                     <h2>당첨 결과</h2>
@@ -85,11 +82,11 @@ function ResultReveal({ results, onFinish }) {
                             const isRevealed = revealed.includes(i);
                             return (
                                 <li
-                                    key={i}
-                                    className={`fade-in rank-${r.rank} ${isHigh ? themeColor : ''}`}
-                                    data-rank={r.rank}
-                                    data-label={renderLabel(r)}
-                                    style={{ '--fade-index': i }}
+                                key={i}
+                                className={`fade-in rank-${r.rank} ${isHigh ? 'high high-bg' : ''}`}
+                                data-rank={r.rank}
+                                data-label={renderLabel(r)}
+                                style={{ '--fade-index': i, 'background-color': isHigh ? HIGH_COLOR : '#f5f7f9', 'color': isHigh ? '#000000' : undefined }}
                                 >
                                     {isHigh && !isRevealed ? (
                                         <div className="pulse" onClick={() => handleReveal(i)}>
@@ -104,12 +101,9 @@ function ResultReveal({ results, onFinish }) {
                             );
                         })}
                     </ul>
-                    <button className={`go-draw no-capture ${themeColor}`} onClick={handleShowSummary} style={{ width: 260 }}>
+                    <button className={`go-draw no-capture`} onClick={handleShowSummary} style={{ width: 260 }}>
                         전체 결과 보기
                     </button>
-                    {results.some((r, i) => isHighRank(r) && revealed.includes(i)) && (
-                        <ImageCaptureQR revealedIndexes={revealed} results={results} />
-                    )}
                 </div>
             ) : (
                 <div>
@@ -124,14 +118,14 @@ function ResultReveal({ results, onFinish }) {
 
                     {needsShipping && (
                         <button
-                            className={`go-draw no-capture ${themeColor}`}
+                            className={`go-draw no-capture`}
                             onClick={() => setShowShippingModal(true)}
                         >
                             배송 정보 입력하기
                         </button>
                     )}
 
-                    <button className={`go-draw no-capture ${themeColor}`} onClick={handleFinish}>
+                    <button className={`go-draw no-capture`} onClick={handleFinish}>
                         확인 완료
                     </button>
                 </div>
