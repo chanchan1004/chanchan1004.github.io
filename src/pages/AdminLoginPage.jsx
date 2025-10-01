@@ -27,7 +27,7 @@ const handleSubmit = async (e) => {
 
     return (
         <div className='admin'>
-            <h1>관리자 로그인</h1>
+            <h1>관리자 로그인 (부산)</h1>
             <form className='admin-login' onSubmit={handleSubmit}>
                 <input
                     type="email"
