@@ -9,7 +9,6 @@ import { getAuth, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
 function DrawPage() {
     const {
         prizes,
-        isLocked,
         isClosed,
         loadFromFirebase,
         updatePrize,
@@ -30,7 +29,7 @@ function DrawPage() {
             setIsLoading(false);
         };
         fetchData();
-    }, []);
+    }, [loadFromFirebase]);
 
     useEffect(() => {
         const auth = getAuth();

@@ -38,12 +38,19 @@ function AdminPage() {
             console.log('[Auth] 관리자 권한 없음 → /admin-login으로 이동');
             navigate('/admin-login');
         }
-    }, [isAdmin]);
+    }, [isAdmin, navigate]);
 
     useEffect(() => {
-        loadFromFirebase();
-        listenToFirebase();
-    }, []);
+    // 초기 로드
+    loadFromFirebase();
+
+    // 실시간 구독 시작 (언서브 함수가 반환되면 클린업에서 해제)
+    const unsub = typeof listenToFirebase === 'function' ? listenToFirebase() : undefined;
+
+    return () => {
+        if (typeof unsub === 'function') unsub();
+    };
+    }, [loadFromFirebase, listenToFirebase]); // ✅ 누락된 deps 추가
 
     const logout = useAuthStore((s) => s.logout);
 

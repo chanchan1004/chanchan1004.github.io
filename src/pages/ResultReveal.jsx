@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Confetti from 'react-confetti';
 import useDrawStore from '../store/useDrawStore';
 import ShippingFormModal from './ShippingFormModal';
@@ -8,6 +8,7 @@ import ImageCaptureQR from '../components/ImageCaptureQR';
 function ResultReveal({ results, onFinish }) {
     const { displayMode,themeColor  } = useDrawStore();
     const [revealed, setRevealed] = useState([]);
+    // eslint-disable-next-line
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showConfetti, setShowConfetti] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
@@ -34,7 +35,7 @@ function ResultReveal({ results, onFinish }) {
         return `${item.rank}등 - ${item.name}`;
     };
 
-    const handleReveal = (index) => {
+    const handleReveal = useCallback((index) => {
         const item = results[index];
 
         if (isHighRank(item)) {
@@ -44,7 +45,7 @@ function ResultReveal({ results, onFinish }) {
         setTimeout(() => {
             setRevealed((prev) => [...prev, index]);
         }, isHighRank(item) ? 500 : 0);
-    };
+    }, [results]);
 
     const handleShowSummary = () => {
         setShowSummary(true);
@@ -58,8 +59,8 @@ function ResultReveal({ results, onFinish }) {
                 handleReveal(currentIndex);
             }
         }
-    }, [currentIndex]);
-
+    }, [currentIndex, results, handleReveal]);
+    
     const handleFinish = () => {
         setShowConfetti(false); // ✅ 이 시점에만 컨페티 끔
         onFinish();             // 외부 종료 콜백 호출
